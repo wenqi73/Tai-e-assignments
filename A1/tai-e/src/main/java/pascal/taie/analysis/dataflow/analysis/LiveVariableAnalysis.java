@@ -74,7 +74,9 @@ public class LiveVariableAnalysis extends
             }
         });
 
+        System.out.printf("====== \n");
         stmt.getUses().forEach(use -> {
+            System.out.printf("%s, %s \n", stmt, use);
             if (use instanceof Var) {
                 in.add((Var) use);
             }

@@ -25,11 +25,9 @@ package pascal.taie.analysis.dataflow.solver;
 import pascal.taie.analysis.dataflow.analysis.DataflowAnalysis;
 import pascal.taie.analysis.dataflow.fact.DataflowResult;
 import pascal.taie.analysis.graph.cfg.CFG;
-import pascal.taie.analysis.graph.cfg.Edge;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.Set;
-import java.util.TreeSet;
 
 class IterativeSolver<Node, Fact> extends Solver<Node, Fact> {
 
@@ -45,19 +43,19 @@ class IterativeSolver<Node, Fact> extends Solver<Node, Fact> {
     @Override
     protected void doSolveBackward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         // TODO - finish me
-        TreeSet<Node> changedList = new TreeSet<>(
-                Comparator.comparingInt(n -> n.hashCode()));;
+        ArrayList<Node> changedList = new ArrayList<>();
         cfg.forEach(node -> {
             if (!cfg.isExit(node)) {
                 changedList.add(node);
             }
         });
         while (!changedList.isEmpty()) {
-            Node current = changedList.pollFirst();
+            // remove last
+            Node current = changedList.remove(changedList.size() - 1);
             Fact out = result.getOutFact(current);
-            Set<Edge<Node>> outEdges = cfg.getOutEdgesOf(current);
-            outEdges.forEach(outEdge -> {
-                Fact fact = result.getInFact(outEdge.getTarget());
+            Set<Node> successors = cfg.getSuccsOf(current);
+            successors.forEach(successor -> {
+                Fact fact = result.getInFact(successor);
                 // update out
                 analysis.meetInto(fact, out);
             });
@@ -65,7 +63,7 @@ class IterativeSolver<Node, Fact> extends Solver<Node, Fact> {
             // update in
             boolean changed = analysis.transferNode(current, in, out);
             if (changed) {
-                changedList.add(current);
+                changedList.add(0, current);
             }
         }
     }
